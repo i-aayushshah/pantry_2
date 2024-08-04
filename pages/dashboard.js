@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
@@ -6,10 +6,6 @@ import PantryList from '../components/PantryList';
 import AddItemForm from '../components/AddItemForm';
 import { db } from '../lib/firebase';
 import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
-import { motion } from 'framer-motion';
-import { FiFilter, FiSortDescending } from 'react-icons/fi';
-
-const MotionSelect = motion.div; // Change from motion.select to motion.div
 
 export default function Dashboard() {
   const [pantryItems, setPantryItems] = useState([]);
@@ -46,70 +42,37 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <motion.h1
-            className="text-4xl font-extrabold text-indigo-900 mb-8 text-center"
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            Your Pantry
-          </motion.h1>
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-            <motion.div
-              className="bg-white rounded-lg shadow-xl p-6"
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <h2 className="text-2xl font-bold text-indigo-800 mb-4">Add New Item</h2>
-              <AddItemForm />
-            </motion.div>
-            <motion.div
-              className="bg-white rounded-lg shadow-xl p-6"
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <h2 className="text-2xl font-bold text-indigo-800 mb-4">Pantry Items</h2>
-              <div className="mb-4 flex flex-col sm:flex-row justify-between space-y-4 sm:space-y-0 sm:space-x-4">
-                <div className="relative flex-1">
-                  <FiFilter className="absolute top-3 left-3 text-gray-400" />
-                  <MotionSelect
-                    as="select"
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 text-base border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <option value="all">All Categories</option>
-                    <option value="fruits">Fruits</option>
-                    <option value="vegetables">Vegetables</option>
-                    <option value="dairy">Dairy</option>
-                    <option value="grains">Grains</option>
-                    <option value="meat">Meat</option>
-                    <option value="other">Other</option>
-                  </MotionSelect>
-                </div>
-                <div className="relative flex-1">
-                  <FiSortDescending className="absolute top-3 left-3 text-gray-400" />
-                  <MotionSelect
-                    as="select"
-                    value={sort}
-                    onChange={(e) => setSort(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 text-base border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <option value="name">Sort by Name</option>
-                    <option value="expirationDate">Sort by Expiration Date</option>
-                  </MotionSelect>
-                </div>
-              </div>
-              <PantryList items={filteredItems} />
-            </motion.div>
+      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-6">Your Pantry</h1>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div>
+            <AddItemForm />
+          </div>
+          <div>
+            <div className="mb-4 flex justify-between">
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+              >
+                <option value="all">All Categories</option>
+                <option value="fruits">Fruits</option>
+                <option value="vegetables">Vegetables</option>
+                <option value="dairy">Dairy</option>
+                <option value="grains">Grains</option>
+                <option value="meat">Meat</option>
+                <option value="other">Other</option>
+              </select>
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value)}
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+              >
+                <option value="name">Sort by Name</option>
+                <option value="expirationDate">Sort by Expiration Date</option>
+                </select>
+            </div>
+            <PantryList items={filteredItems} />
           </div>
         </div>
       </div>
