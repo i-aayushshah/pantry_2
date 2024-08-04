@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { collection, query, where, onSnapshot, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, deleteDoc, doc, updateDoc, addDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import EditItemForm from './EditItemForm';
+
+const LOW_STOCK_THRESHOLD = 3;
 
 export default function PantryList() {
   const [items, setItems] = useState([]);
@@ -21,10 +23,47 @@ export default function PantryList() {
         ...doc.data(),
       }));
       setItems(fetchedItems);
+
+      // Check for low stock items and add to shopping list
+      fetchedItems.forEach(item => {
+        if (item.quantity < LOW_STOCK_THRESHOLD) {
+          addToShoppingList(item);
+        }
+      });
     });
 
     return () => unsubscribe();
   }, [user]);
+
+  const addToShoppingList = async (item) => {
+    try {
+      // Check if the item is already in the shopping list
+      const shoppingListQuery = query(
+        collection(db, 'shoppingList'),
+        where('userId', '==', user.uid),
+        where('name', '==', item.name)
+      );
+      const shoppingListSnapshot = await getDocs(shoppingListQuery);
+
+      if (shoppingListSnapshot.empty) {
+        // If the item is not in the shopping list, add it
+        await addDoc(collection(db, 'shoppingList'), {
+          name: item.name,
+          quantity: LOW_STOCK_THRESHOLD - item.quantity,
+          userId: user.uid,
+          createdAt: new Date(),
+        });
+      } else {
+        // If the item is already in the shopping list, update its quantity
+        const shoppingListItem = shoppingListSnapshot.docs[0];
+        await updateDoc(doc(db, 'shoppingList', shoppingListItem.id), {
+          quantity: shoppingListItem.data().quantity + (LOW_STOCK_THRESHOLD - item.quantity)
+        });
+      }
+    } catch (error) {
+      console.error('Error adding item to shopping list:', error);
+    }
+  };
 
   const handleDelete = async (id) => {
     try {
@@ -42,6 +81,11 @@ export default function PantryList() {
     try {
       await updateDoc(doc(db, 'pantryItems', id), updatedData);
       setEditingItem(null);
+
+      // Check if the updated quantity is below threshold and add to shopping list if necessary
+      if (updatedData.quantity < LOW_STOCK_THRESHOLD) {
+        addToShoppingList({ ...updatedData, id });
+      }
     } catch (error) {
       console.error('Error updating item:', error);
     }
@@ -61,7 +105,7 @@ export default function PantryList() {
       }
       return 0;
     });
-
+    
   return (
     <div>
       <h2 className="text-xl font-semibold mb-4">Your Pantry Items</h2>

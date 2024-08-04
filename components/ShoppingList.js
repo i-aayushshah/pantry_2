@@ -19,6 +19,7 @@ export default function ShoppingList() {
       const fetchedItems = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
+        isAutoAdded: doc.data().isAutoAdded || false,
       }));
       setShoppingItems(fetchedItems);
     });
@@ -124,8 +125,13 @@ export default function ShoppingList() {
       </form>
       <ul className="space-y-2">
         {shoppingItems.map((item) => (
-          <li key={item.id} className="flex items-center justify-between bg-white p-3 rounded-md shadow">
-            <span>{item.name}</span>
+          <li key={item.id} className={`flex items-center justify-between p-3 rounded-md shadow ${item.isAutoAdded ? 'bg-yellow-100' : 'bg-white'}`}>
+            <span>
+              {item.name}
+              {item.isAutoAdded && (
+                <span className="ml-2 text-xs text-yellow-600">(Auto-added due to low stock)</span>
+              )}
+            </span>
             <div className="flex items-center space-x-2">
               <input
                 type="number"
