@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { collection, addDoc } from 'firebase/firestore';
-import { db, storage } from '../lib/firebase'; // Import Firebase Storage
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function AddItemForm() {
@@ -9,43 +8,24 @@ export default function AddItemForm() {
   const [quantity, setQuantity] = useState('');
   const [category, setCategory] = useState('');
   const [expirationDate, setExpirationDate] = useState('');
-  const [file, setFile] = useState(null); // Add state for file
   const { user } = useAuth();
-
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]); // Update state with selected file
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name || !quantity || !category || !expirationDate) return;
 
     try {
-      let imageUrl = '';
-
-      // Upload file if selected
-      if (file) {
-        const fileRef = ref(storage, `images/${file.name}`);
-        await uploadBytes(fileRef, file);
-        imageUrl = await getDownloadURL(fileRef);
-      }
-
-      // Add document to Firestore
       await addDoc(collection(db, 'pantryItems'), {
         name,
         quantity: parseInt(quantity),
         category,
         expirationDate,
         userId: user.uid,
-        imageUrl, // Save file URL
       });
-
-      // Clear form fields
       setName('');
       setQuantity('');
       setCategory('');
       setExpirationDate('');
-      setFile(null);
     } catch (error) {
       console.error('Error adding item:', error);
     }
@@ -105,17 +85,6 @@ export default function AddItemForm() {
           id="expirationDate"
           value={expirationDate}
           onChange={(e) => setExpirationDate(e.target.value)}
-          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-        />
-      </div>
-      <div>
-        <label htmlFor="file" className="block text-sm font-medium text-gray-700">
-          Image (optional)
-        </label>
-        <input
-          type="file"
-          id="file"
-          onChange={handleFileChange}
           className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
         />
       </div>
