@@ -14,13 +14,16 @@ export default function RecipeGenerator() {
     setError('');
     try {
       const ingredientsList = ingredients.split(',').map(item => item.trim());
+      console.log('Sending ingredients:', ingredientsList);
       const generatedRecipe = await generateRecipe(ingredientsList);
+      console.log('Received recipe:', generatedRecipe);
       setRecipe(generatedRecipe);
     } catch (err) {
-      setError('Failed to generate recipe. Please try again.');
-      console.error(err);
+      console.error('Error in recipe generation:', err);
+      setError(`Failed to generate recipe: ${err.message}`);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
