@@ -1,10 +1,28 @@
-import { useState } from 'react';
-import { deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { useAuth } from '../contexts/AuthContext';
 import EditItemForm from './EditItemForm';
 
-export default function PantryList({ items }) {
+export default function PantryList() {
+  const [items, setItems] = useState([]);
   const [editingItem, setEditingItem] = useState(null);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (!user) return;
+
+    const q = query(collection(db, 'pantryItems'), where('userId', '==', user.uid));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const fetchedItems = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setItems(fetchedItems);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   const handleDelete = async (id) => {
     try {
