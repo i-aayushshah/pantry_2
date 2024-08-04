@@ -20,7 +20,7 @@ export default function AddItemForm() {
         quantity: parseInt(quantity),
         category,
         expirationDate,
-        userId: user.uid,
+        userId: user.email,
       });
       setName('');
       setQuantity('');
