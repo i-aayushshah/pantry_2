@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { useState, useEffect } from 'react';
+import { collection, query, where, onSnapshot, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import EditItemForm from './EditItemForm';
@@ -7,6 +7,8 @@ import EditItemForm from './EditItemForm';
 export default function PantryList() {
   const [items, setItems] = useState([]);
   const [editingItem, setEditingItem] = useState(null);
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('name');
   const { user } = useAuth();
 
   useEffect(() => {
@@ -49,14 +51,48 @@ export default function PantryList() {
     setEditingItem(null);
   };
 
+  const filteredAndSortedItems = items
+    .filter(item => categoryFilter === 'all' || item.category === categoryFilter)
+    .sort((a, b) => {
+      if (sortBy === 'name') {
+        return a.name.localeCompare(b.name);
+      } else if (sortBy === 'expirationDate') {
+        return new Date(a.expirationDate) - new Date(b.expirationDate);
+      }
+      return 0;
+    });
+
   return (
     <div>
       <h2 className="text-xl font-semibold mb-4">Your Pantry Items</h2>
-      {items.length === 0 ? (
+      <div className="mb-4 flex justify-between">
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+        >
+          <option value="all">All Categories</option>
+          <option value="fruits">Fruits</option>
+          <option value="vegetables">Vegetables</option>
+          <option value="dairy">Dairy</option>
+          <option value="grains">Grains</option>
+          <option value="meat">Meat</option>
+          <option value="other">Other</option>
+        </select>
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+        >
+          <option value="name">Sort by Name</option>
+          <option value="expirationDate">Sort by Expiration Date</option>
+        </select>
+      </div>
+      {filteredAndSortedItems.length === 0 ? (
         <p>No items in your pantry yet.</p>
       ) : (
         <ul className="divide-y divide-gray-200">
-          {items.map((item) => (
+          {filteredAndSortedItems.map((item) => (
             <li key={item.id} className="py-4 flex flex-col">
               {editingItem && editingItem.id === item.id ? (
                 <EditItemForm
